@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.peng.seckill.category.dao.CategoryDao" >
+
+  <sql id="Base_Column_List" >
+    cid, cname, cdesc
+  </sql>
+
+  <!--查询所有分类-->
+  <select id="findAllCategory" resultType="com.peng.seckill.category.entity.Category" parameterType="java.lang.Long" >
+    select
+    <include refid="Base_Column_List" />
+    from t_category
+  </select>
+  <!--添加商品分类分类-->
+  <insert id="addCategory" parameterType="com.peng.seckill.category.entity.Category" >
+    insert into t_category ( cname, cdesc
+    )
+    values ( #{cname,jdbcType=VARCHAR}, #{cdesc,jdbcType=VARCHAR}
+    )
+  </insert>
+
+  <select id="selectByPrimaryKey" resultType="com.peng.seckill.category.entity.Category" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_category
+    where cid = #{cid,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from t_category
+    where cid = #{cid,jdbcType=BIGINT}
+  </delete>
+  <update id="updateByPrimaryKeySelective" parameterType="com.peng.seckill.category.entity.Category" >
+    update t_category
+    <set >
+      <if test="cname != null" >
+        cname = #{cname,jdbcType=VARCHAR},
+      </if>
+      <if test="cdesc != null" >
+        cdesc = #{cdesc,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where cid = #{cid,jdbcType=BIGINT}
+  </update>
+
+</mapper>

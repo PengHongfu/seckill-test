@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.peng.seckill.seckill.dao.SeckillDao" >
+  <resultMap id="BaseResultMap" type="com.peng.seckill.seckill.entity.Seckill" >
+    <id column="seckill_id" property="seckillId" jdbcType="BIGINT" />
+    <result column="sname" property="sname" jdbcType="VARCHAR" />
+    <result column="number" property="number" jdbcType="INTEGER" />
+    <result column="start_time" property="startTime" jdbcType="TIMESTAMP" />
+    <result column="end_time" property="endTime" jdbcType="TIMESTAMP" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="desc" property="desc" jdbcType="VARCHAR" />
+    <result column="price" property="price" jdbcType="DECIMAL" />
+    <result column="cid" property="cid" jdbcType="BIGINT" />
+    <result column="image" property="image" jdbcType="VARCHAR" />
+  </resultMap>
+
+
+
+  <sql id="Base_Column_List" >
+    seckill_id, sname, numbers, start_time, end_time, create_time, seckill_desc, price,
+    cid, image
+  </sql>
+  <!--库存减一-->
+  <update id="reduceNumbers">
+      UPDATE t_seckill
+		SET numbers = numbers-1
+		WHERE seckill_id=#{seckillId}
+		AND start_time <![CDATA[ <= ]]>
+		#{killTime}
+		AND end_time >= #{killTime}
+		AND numbers > 0;
+  </update>
+
+
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select *
+    from t_seckill
+  </select>
+<!--测试返回map-->
+  <select id="selectAllToHashMap" resultType="java.util.HashMap" >
+    select t.*,c.cname
+    from t_seckill t INNER JOIN t_category c
+    WHERE  t.cid = c.cid order by create_time desc
+  </select>
+  <!--模糊查询-->
+
+  <!--按主键查询-->
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill
+    where seckill_id = #{seckillId,jdbcType=BIGINT}
+  </select>
+  <!--按商品分类查询-->
+  <select id="selectByCategory" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill
+    where cid= #{cid,jdbcType=BIGINT}
+  </select>
+  <!--查询最新上架的商品-->
+  <select id="selectByNewTime" resultMap="BaseResultMap" >
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill
+    order BY create_time DESC  limit 0,4
+  </select>
+  <!--查询库存多的商品-->
+  <select id="selectLargeNumbers" resultMap="BaseResultMap" >
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill
+    order BY numbers DESC  limit 0,5
+  </select>
+<!--模糊查询-->
+  <select id="selectSeckillListByLike" resultType="java.util.HashMap" >
+    select t.*,c.cname
+    from t_seckill t INNER JOIN t_category c
+    <trim prefix="WHERE" prefixOverrides="AND|OR">
+      t.cid = c.cid
+      <if test="sname != null and sname!='' " >
+        AND sname LIKE CONCAT(CONCAT('%', #{sname}), '%')
+      </if>
+      <if test="startTime !=null and startTime!=''" >
+        AND start_time LIKE CONCAT(CONCAT('%', #{startTime}), '%')
+      </if>
+      <if test="endTime != null and endTime!=''" >
+        AND end_time LIKE CONCAT(CONCAT('%', #{endTime}), '%')
+      </if>
+      <if test="createTime != null and createTime!=''" >
+        AND create_time LIKE CONCAT(CONCAT('%', #{createTime}), '%')
+      </if>
+      <if test="seckillDesc != null and seckillDesc!=''" >
+        AND seckill_desc LIKE CONCAT(CONCAT('%', #{seckillDesc}), '%')
+      </if>
+      <if test="price != null and price!=''" >
+        AND price <![CDATA[ <= ]]> #{price}
+      </if>
+      <if test="cname != null and cname!=''"  >
+        AND  c.cname LIKE CONCAT(CONCAT('%', #{cname}), '%')
+      </if>
+    </trim>
+
+
+
+  </select>
+
+  <select id="selectLikeBySname" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select
+    <include refid="Base_Column_List" />
+    from t_seckill
+    where 1=1
+    <if test="sname!=''and sname!=null">
+      AND   sname LIKE CONCAT(CONCAT('%', #{sname}), '%')
+    </if>
+
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from t_seckill
+    where seckill_id = #{seckillId,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.peng.seckill.seckill.entity.Seckill" >
+    insert into t_seckill (seckill_id, sname, numbers,
+    start_time, end_time, create_time,
+    seckill_desc, price, cid,
+    image)
+    values (#{seckillId,jdbcType=BIGINT}, #{sname,jdbcType=VARCHAR}, #{numbers,jdbcType=INTEGER},
+    #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP},
+    #{seckillDesc,jdbcType=VARCHAR}, #{price,jdbcType=DECIMAL}, #{cid,jdbcType=BIGINT},
+    #{image,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.peng.seckill.seckill.entity.Seckill" >
+    insert into t_seckill
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="seckillId != null" >
+        seckill_id,
+      </if>
+      <if test="sname != null" >
+        sname,
+      </if>
+      <if test="numbers != null" >
+        numbers,
+      </if>
+      <if test="startTime != null" >
+        start_time,
+      </if>
+      <if test="endTime != null" >
+        end_time,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="seckillDesc != null" >
+        seckill_desc,
+      </if>
+      <if test="price != null" >
+        price,
+      </if>
+      <if test="cid != null" >
+        cid,
+      </if>
+      <if test="image != null" >
+        image,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="seckillId != null" >
+        #{seckillId,jdbcType=BIGINT},
+      </if>
+      <if test="sname != null" >
+        #{sname,jdbcType=VARCHAR},
+      </if>
+      <if test="numbers != null" >
+        #{numbers,jdbcType=INTEGER},
+      </if>
+      <if test="startTime != null" >
+        #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null" >
+        #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="seckillDesc != null" >
+        #{seckillDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="price != null" >
+        #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="cid != null" >
+        #{cid,jdbcType=BIGINT},
+      </if>
+      <if test="image != null" >
+        #{image,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.peng.seckill.seckill.entity.Seckill" >
+    update t_seckill
+    <set >
+      <if test="sname != null" >
+        sname = #{sname,jdbcType=VARCHAR},
+      </if>
+      <if test="numbers != null" >
+        numbers = #{numbers,jdbcType=INTEGER},
+      </if>
+      <if test="startTime != null" >
+        start_time = #{startTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="endTime != null" >
+        end_time = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="seckillDesc != null" >
+        seckill_desc = #{seckillDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="price != null" >
+        price = #{price,jdbcType=DECIMAL},
+      </if>
+      <if test="cid != null" >
+        cid = #{cid,jdbcType=BIGINT},
+      </if>
+      <if test="image != null" >
+        image = #{image,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where seckill_id = #{seckillId,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.peng.seckill.seckill.entity.Seckill" >
+    update t_seckill
+    set sname = #{sname,jdbcType=VARCHAR},
+      numbers = #{numbers,jdbcType=INTEGER},
+      start_time = #{startTime,jdbcType=TIMESTAMP},
+      end_time = #{endTime,jdbcType=TIMESTAMP},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      seckill_desc = #{seckillDesc,jdbcType=VARCHAR},
+      price = #{price,jdbcType=DECIMAL},
+      cid = #{cid,jdbcType=BIGINT},
+      image = #{image,jdbcType=VARCHAR}
+    where seckill_id = #{seckillId,jdbcType=BIGINT}
+  </update>
+</mapper>

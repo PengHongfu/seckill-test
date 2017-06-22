@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.peng.seckill.seckillorder.dao.SeckillOrderDao">
+    <resultMap id="BaseResultMap" type="com.peng.seckill.seckillorder.entity.SeckillOrder">
+        <id column="orderId" property="orderId" jdbcType="CHAR"/>
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="state" property="state" jdbcType="INTEGER"/>
+        <!--多对一-->
+        <association property="seckillId" javaType="com.peng.seckill.seckill.entity.Seckill">
+            <id column="seckill_id" property="seckillId" jdbcType="BIGINT" />
+            <result column="sname" property="sname" jdbcType="VARCHAR" />
+            <result column="numbers" property="numbers" jdbcType="INTEGER" />
+            <result column="start_time" property="startTime" jdbcType="TIMESTAMP" />
+            <result column="end_time" property="endTime" jdbcType="TIMESTAMP" />
+            <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+            <result column="seckill_desc" property="seckillDesc" jdbcType="VARCHAR" />
+            <result column="price" property="price" jdbcType="DECIMAL" />
+            <result column="cid" property="cid" jdbcType="BIGINT" />
+            <result column="image" property="image" jdbcType="VARCHAR" />
+        </association>
+        <!--一对多-->
+        <collection property="userId" ofType="com.peng.seckill.user.entity.User">
+            <id column="uid" property="uid" jdbcType="CHAR"/>
+            <result column="loginname" property="loginname" jdbcType="VARCHAR"/>
+            <result column="loginpass" property="loginpass" jdbcType="VARCHAR"/>
+            <result column="email" property="email" jdbcType="VARCHAR"/>
+            <result column="phone" property="phone" jdbcType="VARCHAR"/>
+            <result column="address" property="address" jdbcType="VARCHAR"/>
+        </collection>
+    </resultMap>
+    <!--管理员查询秒杀订单-->
+    <select id="findAllOrderByAdmin" resultMap="BaseResultMap" >
+        select *
+        from t_seckillorder o INNER JOIN t_user u INNER JOIN t_seckill s
+        where u.uid=o.userId AND o.seckillId=s.seckill_id ORDER BY o.createTime desc
+    </select>
+
+    <!--查询用户的秒杀订单-->
+    <select id="findByUserId" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select *
+        from t_seckillorder o INNER JOIN t_user u INNER JOIN t_seckill s
+        where u.uid=o.userId AND u.uid =#{uid} AND o.seckillId=s.seckill_id ORDER BY o.createTime desc
+    </select>
+    <!--根据订单号查询订单信息-->
+    <select id="findBySeckillOrderId" resultMap="BaseResultMap" parameterType="java.lang.String">
+        select *
+        from t_seckillorder o INNER JOIN t_user u INNER JOIN t_seckill s
+        where u.uid=o.userId AND o.orderId=#{orderId} AND o.seckillId=s.seckill_id
+    </select>
+
+    <!--用户秒杀查重-->
+    <select id="findByUserIdAndSeckillId" resultMap="BaseResultMap">
+        select *
+        from t_seckillorder o INNER JOIN t_user u INNER JOIN t_seckill s
+        where u.uid=o.userId AND u.uid =#{uid} AND o.seckillId=s.seckill_id And s.seckill_id=#{seckill_id}
+    </select>
+
+    <!--秒杀成功后添加用户订单-->
+    <insert id="insert" parameterType="com.peng.seckill.seckillorder.entity.SeckillOrder" >
+        insert into t_seckillorder (orderId, seckillId,userId, state)
+        values (#{orderid,jdbcType=CHAR}, #{seckillid,jdbcType=BIGINT},
+        #{userid,jdbcType=CHAR}, 0)
+    </insert>
+    <!--修改-->
+    <delete id="updateStateByorderId">
+        UPDATE t_seckillorder SET state=#{state}
+        WHERE  orderId =#{orderId}
+    </delete>
+    <!--模糊查询-->
+    <select id="orderFindByLike" resultMap="BaseResultMap">
+        SELECT *
+        from t_seckillorder o INNER JOIN t_user u INNER JOIN t_seckill s
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            u.uid=o.userId AND o.seckillId=s.seckill_id
+            <if test="orderId!=''and orderId!=null" >
+                AND orderId LIKE CONCAT(CONCAT('%', #{orderId}), '%')
+            </if>
+            <if test="sname!=''and sname!=null" >
+                AND s.sname LIKE CONCAT(CONCAT('%', #{sname}), '%')
+            </if>
+            <if test="loginname!=''and loginname!=null" >
+                AND u.loginname LIKE CONCAT(CONCAT('%', #{loginname}), '%')
+            </if>
+            <if test="createTime!=''and createTime!=null" >
+                AND createTime LIKE CONCAT(CONCAT('%', #{createTime}), '%')
+            </if>
+
+        </trim>
+    </select>
+    <!-- <if test="sname!=''and sname!=null">
+      AND   sname LIKE CONCAT(CONCAT('%', #{sname}), '%')
+    </if>-->
+</mapper>
